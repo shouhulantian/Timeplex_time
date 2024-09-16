@@ -387,8 +387,8 @@ class Trainer(object):
                                                    predict_rel=predict_rel, verbose=self.verbose, hooks=self.hooks, load_to_gpu=self.load_to_gpu,
                                                    flag_add_reverse=self.flag_add_reverse)
 
-                    if self.predict_time:
-                        time_evaluate(self.scoring_function, self.valid.kb, self.test.kb, time_args=self.time_args)
+                    # if self.predict_time:
+                    #     time_evaluate(self.scoring_function, self.valid.kb, self.test.kb, time_args=self.time_args)
 
 
                     self.scoring_function.train()
