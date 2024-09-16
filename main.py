@@ -352,7 +352,11 @@ if __name__ == "__main__":
     parser.add_argument('-a', '--model_arguments', help="model arguments as in __init__ of "
                                                         "model (Excluding entity and relation count), embedding_dim "
                                                         "argument required for training. "
-                                                        "This is a json string", required=False,default='{"embedding_dim":200, "srt_wt": 5.0, "ort_wt": 5.0, "sot_wt": 5.0, "time_reg_wt":1.0, "emb_reg_wt":0.005}')
+                                                        "This is a json string", required=False)
+    # parser.add_argument('-a', '--model_arguments', help="model arguments as in __init__ of "
+    #                                                     "model (Excluding entity and relation count), embedding_dim "
+    #                                                     "argument required for training. "
+    #                                                     "This is a json string", required=False,default='{"embedding_dim":200, "srt_wt": 5.0, "ort_wt": 5.0, "sot_wt": 5.0, "time_reg_wt":1.0, "emb_reg_wt":0.005}')
     parser.add_argument('-o', '--optimizer', required=False, default='Adagrad')
     parser.add_argument('-l', '--loss', help="loss function name as in losses.py",
                         required=False, default='crossentropy_loss')
