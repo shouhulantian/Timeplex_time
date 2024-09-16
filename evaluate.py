@@ -1110,7 +1110,6 @@ def evaluate(name, ranker, kb, batch_size, predict_time=0, predict_time_pair=0, 
 
         for i in range(num_facts):
             s_val, r_val, o_val = s[i][0].item(), r[i][0].item(), o[i][0].item()
-            print(t_ids[i])
             valid_list.append(
                 (rem[s_val], rrm[r_val], rem[o_val], rtm[t_ids[i][4].item()]))
 
