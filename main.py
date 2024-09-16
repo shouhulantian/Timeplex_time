@@ -253,7 +253,7 @@ def main(mode, dataset, dataset_root, save_dir, tflogs_dir, debug, model_name, m
             mb_start = 0
         max_mini_batch_count = int(max_epochs * ktrain.facts.shape[0] / batch_size)
         print("max_mini_batch_count: %d, eval_batch_size %d" % (max_mini_batch_count, eval_batch_size))
-        tr.start(max_mini_batch_count, [eval_every_x_mini_batches // 20, 20], mb_start, tflogs_dir,
+        tr.start(max_mini_batch_count, [eval_every_x_mini_batches // 20, 20], mb_start, tflogs_dir,predict_time=predict_time
                  )
 
     elif mode == 'test':
@@ -316,7 +316,7 @@ def main(mode, dataset, dataset_root, save_dir, tflogs_dir, debug, model_name, m
         test_score = evaluate.evaluate("test", ranker, ktest, eval_batch_size,
                                        verbose=verbose, hooks=hooks, save_text=save_text,
                                        predict_rel=predict_rel,
-                                       load_to_gpu=has_cuda, flag_add_reverse=flag_add_reverse)
+                                       load_to_gpu=has_cuda, flag_add_reverse=flag_add_reverse,predict_time=predict_time)
 
         print("Valid")
         pprint.pprint(valid_score)

@@ -382,10 +382,10 @@ class Trainer(object):
 
                     valid_score = evaluate.evaluate("valid", self.ranker_valid, self.valid.kb, self.eval_batch,
                                                     predict_rel=predict_rel, verbose=self.verbose, hooks=self.hooks, load_to_gpu=self.load_to_gpu, 
-                                                    flag_add_reverse=self.flag_add_reverse)
+                                                    flag_add_reverse=self.flag_add_reverse,predict_time=predict_time)
                     test_score = evaluate.evaluate("test ", self.ranker_test, self.test.kb, self.eval_batch,
                                                    predict_rel=predict_rel, verbose=self.verbose, hooks=self.hooks, load_to_gpu=self.load_to_gpu,
-                                                   flag_add_reverse=self.flag_add_reverse)
+                                                   flag_add_reverse=self.flag_add_reverse,predict_time=predict_time)
 
                     # if self.predict_time:
                     #     time_evaluate(self.scoring_function, self.valid.kb, self.test.kb, time_args=self.time_args)
