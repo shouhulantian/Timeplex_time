@@ -1256,40 +1256,40 @@ def evaluate(name, ranker, kb, batch_size, predict_time=0, predict_time_pair=0, 
             top5_tail.append(top5)
 
 
-        if predict_rel:  # relation scores
-            scores_r, score_of_expected_r = ranker.forward(
-                s, r, o, t, flag_t=1, load_to_gpu=load_to_gpu)
-            ranks_r = ranker.filtered_ranks(start, end, scores_r, score_of_expected_r, predict='t', load_to_gpu=load_to_gpu)
-
-            totals['t']['mr'] += ranks_r.sum()
-            totals['t']['mrr'] += (1.0 / ranks_r).sum()
-            totals['t']['hits10'] += ranks_r.le(10).float().sum()
-            totals['t']['hits1'] += ranks_r.eq(1).float().sum()
-            scores_r_np = scores_r.data.cpu().numpy()
-            score_of_expected_r_np = score_of_expected_r.data.cpu().numpy()
-
-            for i in range(num_facts):
-                s_val, r_val, o_val = s[i][0].item(
-                ), r[i][0].item(), o[i][0].item()
-                valid_list.append(
-                    (rem[s_val], rrm[r_val], rem[o_val], rtm[t_ids[i].item()]))
-
-                # if('<OOV>' in valid_list[-1]):
-                #     print(valid_list[-1])
-                #     xx=input()
-
-                ranks_rel.append(ranks_r[i].item())
-
-                # restore original value, which was overwritten during
-                # filtering
-                scores_r_np[i][r_val] = score_of_expected_r_np[i]
-
-                # top3 rel
-                top3 = []
-                for idx in numpy.argsort(scores_r_np[i])[::-1][:3]:
-                    top3.append(rrm[idx])
-
-                top3_rel.append(top3)
+        # if predict_rel:  # relation scores
+        #     scores_r, score_of_expected_r = ranker.forward(
+        #         s, r, o, t, flag_t=1, load_to_gpu=load_to_gpu)
+        #     ranks_r = ranker.filtered_ranks(start, end, scores_r, score_of_expected_r, predict='t', load_to_gpu=load_to_gpu)
+        #
+        #     totals['t']['mr'] += ranks_r.sum()
+        #     totals['t']['mrr'] += (1.0 / ranks_r).sum()
+        #     totals['t']['hits10'] += ranks_r.le(10).float().sum()
+        #     totals['t']['hits1'] += ranks_r.eq(1).float().sum()
+        #     scores_r_np = scores_r.data.cpu().numpy()
+        #     score_of_expected_r_np = score_of_expected_r.data.cpu().numpy()
+        #
+        #     for i in range(num_facts):
+        #         s_val, r_val, o_val = s[i][0].item(
+        #         ), r[i][0].item(), o[i][0].item()
+        #         valid_list.append(
+        #             (rem[s_val], rrm[r_val], rem[o_val], rtm[t_ids[i][-2].item()]))
+        #
+        #         # if('<OOV>' in valid_list[-1]):
+        #         #     print(valid_list[-1])
+        #         #     xx=input()
+        #
+        #         ranks_rel.append(ranks_r[i].item())
+        #
+        #         # restore original value, which was overwritten during
+        #         # filtering
+        #         scores_r_np[i][r_val] = score_of_expected_r_np[i]
+        #
+        #         # top3 rel
+        #         top3 = []
+        #         for idx in numpy.argsort(scores_r_np[i])[::-1][:3]:
+        #             top3.append(rrm[idx])
+        #
+        #         top3_rel.append(top3)
 
         if predict_time:  # relation scores
             scores_r, score_of_expected_r = ranker.forward(
