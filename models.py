@@ -130,9 +130,9 @@ class TimePlex_base(torch.nn.Module):
         if t is not None:
             # if not t.shape[-1]==1:
             if (t.shape[-1] == len(time_index)):  # pick which dimension to index
-                t = t[:, :, time_index["t_s"]]
+                t = t[:, :, time_index["t_str"]]
             else:
-                t = t[:, time_index["t_s"], :]
+                t = t[:, time_index["t_str"], :]
 
         s_im = self.E_im(s) if s is not None else self.E_im.weight.unsqueeze(0)
         r_im = self.R_im(r) if r is not None else self.R_im.weight.unsqueeze(0)
@@ -183,7 +183,7 @@ class TimePlex_base(torch.nn.Module):
             score = self.srt_wt * srt + self.ort_wt * ort + self.sot_wt * sot
 
             # --for inverse facts--#
-            r = r + self.relation_count / 2
+            r = r + self.relation_count // 2
             
             rs_re = self.Rs_re(r)
             rs_im = self.Rs_im(r)
@@ -450,9 +450,9 @@ class TComplex_lx(torch.nn.Module):
     def forward(self, s, r, o, t, flag_debug=0):
         if t is not None:
             if (t.shape[-1] == len(time_index)):  # pick which dimension to index
-                t = t[:, :, time_index["t_s"]]
+                t = t[:, :, time_index["t_str"]]
             else:
-                t = t[:, time_index["t_s"], :]
+                t = t[:, time_index["t_str"], :]
 
         s_im = self.E_im(s) if s is not None else self.E_im.weight.unsqueeze(0)
         r_im = self.R_im(r) if r is not None else self.R_im.weight.unsqueeze(0)

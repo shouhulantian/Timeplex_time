@@ -524,6 +524,7 @@ class Ranker(object):
             # ipdb.set_trace()
             scores = self.scoring_function(s, r, o, None).data
             # ipdb.set_trace()
+            t = t[:,:,-2]
             score_of_expected = scores.gather(1, t.data)
         elif flag_tp:
             if t is not None:
@@ -943,7 +944,7 @@ def evaluate(name, ranker, kb, batch_size, predict_time=0, predict_time_pair=0, 
     # rel_wise_perf=dd(lambda:[])
 
     valid_list = []
-    ranks_head, ranks_tail, ranks_rel = [], [], []
+    ranks_head, ranks_tail, ranks_rel, ranks_time = [], [], [], []
     top5_tail, top5_head, top3_rel = [], [], []
     # predict_rel=False
 
@@ -1110,7 +1111,7 @@ def evaluate(name, ranker, kb, batch_size, predict_time=0, predict_time_pair=0, 
         for i in range(num_facts):
             s_val, r_val, o_val = s[i][0].item(), r[i][0].item(), o[i][0].item()
             valid_list.append(
-                (rem[s_val], rrm[r_val], rem[o_val], rtm[t_ids[i][-2].item()]))
+                (rem[s_val], rrm[r_val], rem[o_val], rtm[t_ids[i].item()]))
 
             # if('<OOV>' in valid_list[-1]):
             #     print(valid_list[-1])
@@ -1165,6 +1166,43 @@ def evaluate(name, ranker, kb, batch_size, predict_time=0, predict_time_pair=0, 
                     top3.append(rrm[idx])
 
                 top3_rel.append(top3)
+
+        if predict_time:  # relation scores
+            scores_t, score_of_expected_t = ranker.forward(
+                s, r, o, t, flag_t=1, load_to_gpu=load_to_gpu)
+            ranks_t = ranker.filtered_ranks(start, end, scores_t, score_of_expected_t, predict='t', load_to_gpu=load_to_gpu)
+
+            totals['r']['mr'] += ranks_r.sum()
+            totals['r']['mrr'] += (1.0 / ranks_r).sum()
+            totals['r']['hits10'] += ranks_r.le(10).float().sum()
+            totals['r']['hits1'] += ranks_r.eq(1).float().sum()
+
+            scores_r_np = scores_r.data.cpu().numpy()
+            score_of_expected_r_np = score_of_expected_r.data.cpu().numpy()
+
+            for i in range(num_facts):
+                s_val, r_val, o_val = s[i][0].item(
+                ), r[i][0].item(), o[i][0].item()
+                valid_list.append(
+                    (rem[s_val], rrm[r_val], rem[o_val], rtm[t_ids[i].item()]))
+
+                # if('<OOV>' in valid_list[-1]):
+                #     print(valid_list[-1])
+                #     xx=input()
+
+                ranks_rel.append(ranks_r[i].item())
+
+                # restore original value, which was overwritten during
+                # filtering
+                scores_r_np[i][r_val] = score_of_expected_r_np[i]
+
+                # top3 rel
+                top3 = []
+                for idx in numpy.argsort(scores_r_np[i])[::-1][:3]:
+                    top3.append(rrm[idx])
+
+                top3_rel.append(top3)
+
 
         # ---------------------------#
         # '''

@@ -1,0 +1,45 @@
+Namespace(batch_norm=0, batch_size=1000, bin_time=0, data_repository_root='data', dataset='icews14', debug=0, dump_t_scores=None, eval_batch_size=500, eval_every_x_mini_batches=100, expand_mode='None', filter_method='time-str', flag_add_reverse=1, flag_additional_filter=0, flag_time_smooth=0, gradient_clip=None, hooks=[], learning_rate=0.1, loss='crossentropy_loss_AllNeg', max_epochs=250, message=None, mode='train', model='TimePlex_base', model_arguments={'embedding_dim': 200, 'srt_wt': 5.0, 'ort_wt': 5.0, 'sot_wt': 5.0, 'time_reg_wt': 1.0, 'emb_reg_wt': 0.005}, model_type='custom', negative_sample_count=0, oov_entity=1, optimizer='Adagrad', patience=3, perturb_time=0, predict_rel=0, predict_time=0, regularization_coefficient=1.0, regularizer=2.0, resume_from_save=None, save_dir='./models/icews14_timeplex_base', save_text=None, save_time_results=None, subset=1, tflogs_dir='./models/icews14_timeplex_base', time_loss_margin=5.0, time_neg_samples=0, time_prediction_method='greedy-coalescing', use_time_facts=0, verbose=0)
+User Message::  None
+Command::  main.py -d icews14 -m TimePlex_base -a {"embedding_dim":200, "srt_wt": 5.0, "ort_wt": 5.0, "sot_wt": 5.0, "time_reg_wt":1.0, "emb_reg_wt":0.005} -l crossentropy_loss_AllNeg -r 0.1 -b 1000 -x 2000 -n 0 -v 1 -q 0 -y 500 -g_reg 2 -g 1.0 --filter_method time-str -e 250 --flag_add_reverse 1 --save_dir icews14_timeplex_base -x 100
+Flag: use_time_tokenizer- False
+Flag: flag_add_reverse- 1
+Flag: use_time_interval False
+KB ./data/icews14/train.txt True
+Data Size: ./data/icews14/train.txt (72826, 9)
+KB ./data/icews14/test.txt 0
+Data Size: ./data/icews14/test.txt (8963, 9)
+KB ./data/icews14/valid.txt 0
+Data Size: ./data/icews14/valid.txt (8941, 9)
+KB data/icews14/train.txt True
+Data Size: data/icews14/train.txt (72826, 9)
+KB data/icews14/test.txt 0
+Data Size: data/icews14/test.txt (8963, 9)
+KB data/icews14/valid.txt 0
+Data Size: data/icews14/valid.txt (8941, 9)
+Train (no expansion) (72826, 9)
+Test (8963, 9)
+Valid (8941, 9)
+Number of timestamps:  365
+[(755645, 358), (755646, 359), (755647, 360), (755648, 361), (755649, 362), (755650, 363), (755651, 364), (755652, 365), (755653, 366), ('UNK-TIME', 367)]
+Using reg  2.0
+final model arguments {'embedding_dim': 200, 'srt_wt': 5.0, 'ort_wt': 5.0, 'sot_wt': 5.0, 'time_reg_wt': 1.0, 'emb_reg_wt': 0.005, 'entity_count': 6870, 'timeInterval_count': 365, 'reg': 2.0, 'relation_count': 460, 'flag_add_reverse': 1, 'batch_norm': 0}
+Regularization value: in time_complex_fast:  2.0
+batch_norm not being used
+Not expanding training data
+Train (after expansion) (72826, 9)
+building all known database from joint kb
+Applying filter- time-str
+If using additional filter- 0
+converting to lists
+done
+building all known database from joint kb
+Applying filter- time-str
+If using additional filter- 0
+converting to lists
+done
+Using regularization_coefficient[: 1.0
+max_mini_batch_count: 18206, eval_batch_size 500
+Starting training
+Mini Batches     1 or   0.0 epochs |[1;34m****------------------[0;0m|  20.0% | Current Loss   9.3987 | reg  0.564 | time      2 ||Mini Batches     2 or   0.0 epochs |[1;34m********--------------[0;0m|  40.0% | Current Loss  10.6468 | reg  1.816 | time      4 ||Mini Batches     3 or   0.0 epochs |[1;34m*************---------[0;0m|  60.0% | Current Loss  10.2140 | reg  1.519 | time      6 ||Mini Batches     4 or   0.0 epochs |[1;34m*****************-----[0;0m|  80.0% | Current Loss   8.9168 | reg  0.646 | time      7 ||Mini Batches     5 or   0.1 epochs |[1;34m**********************[0;0m| 100.0% | Average Loss   9.4927 | reg  0.555 | time      9 ||
+Mini Batches     6 or   0.1 epochs |[1;34m****------------------[0;0m|  20.0% | Current Loss   7.7871 | reg  0.554 | time     11 ||Mini Batches     7 or   0.1 epochs |[1;34m********--------------[0;0m|  40.0% | Current Loss   7.4554 | reg  0.566 | time     13 ||Mini Batches     8 or   0.1 epochs |[1;34m*************---------[0;0m|  60.0% | Current Loss   7.3150 | reg  0.578 | time     14 ||Mini Batches     9 or   0.1 epochs |[1;34m*****************-----[0;0m|  80.0% | Current Loss   7.0315 | reg  0.585 | time     16 ||Mini Batches    10 or   0.1 epochs |[1;34m**********************[0;0m| 100.0% | Average Loss   7.2499 | reg  0.580 | time     18 ||
+Mini Batches    11 or   0.1 epochs |[1;34m****------------------[0;0m|  20.0% | Current Loss   6.5514 | reg  0.586 | time     20 ||Mini Batches    12 or   0.2 epochs |[1;34m********--------------[0;0m|  40.0% | Current Loss   6.3857 | reg  0.582 | time     22 ||Mini Batches    13 or   0.2 epochs |[1;34m*************---------[0;0m|  60.0% | Current Loss   6.3308 | reg  0.587 | time     24 ||Mini Batches    14 or   0.2 epochs |[1;34m*****************-----[0;0m|  80.0% | Current Loss   6.1735 | reg  0.589 | time     26 ||

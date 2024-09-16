@@ -43,8 +43,8 @@ def init_model(model_name, model_arguments, datamap, ktrain, eval_batch_size, fl
         model_arguments['timeInterval_count'] = len(datamap.year2id)
         print("BIN: to year-pair", datamap.year2id)
     else:
-        model_arguments['timeInterval_count'] = len(datamap.dateYear2id)  # intervalId2dateYears)#year2id)#dateYear2id
-        print("Number of timestamps: ", len(datamap.dateYear2id))
+        model_arguments['timeInterval_count'] = len(datamap.id2TimeStr)  # intervalId2dateYears)#year2id)#dateYear2id
+        print("Number of timestamps: ", len(datamap.id2TimeStr))
         print(list(datamap.dateYear2id.items())[-10:])
 
     if flag_time_smooth:
@@ -273,9 +273,26 @@ def main(mode, dataset, dataset_root, save_dir, tflogs_dir, debug, model_name, m
         print("test_score_e1", saved_model['test_score_e1'])
         print("test_score_e2", saved_model['test_score_e2'])
 
-        # '''
         # ---entity/relation prediction--- #
         print("Scores with {} filtering".format(filter_method))
+
+        # '''
+        # ---time prediction--- #
+        utils.colored_print("yellow", "\nEvaluating on time prediction\n")
+
+        # create test/valid kbs for subset of data (for which boths start end have been provided)
+        # ktest_sub = kb.kb(datamap, os.path.join(dataset_root, 'intervals/test.txt'),
+        #                   add_unknowns=int(not (int(introduce_oov))),
+        #                   use_time_tokenizer=use_time_tokenizer)
+        #
+        # kvalid_sub = kb.kb(datamap, os.path.join(dataset_root, 'intervals/valid.txt'),
+        #                    add_unknowns=int(not (int(introduce_oov))),
+        #                    use_time_tokenizer=use_time_tokenizer)
+        # if predict_time:
+        #     time_evaluate(scoring_function, kvalid_sub, ktest_sub, time_args=time_args, dump_t_scores=dump_t_scores,
+        #                   load_to_gpu=has_cuda, save_time_results= save_time_results)
+        # '''
+        # ------------------- #
 
         # ranker = evaluate.Ranker(scoring_function, kb.union([ktrain, kvalid, ktest]), kb_data=kvalid,
         #                          filter_method=filter_method, flag_additional_filter=flag_additional_filter,
@@ -287,7 +304,7 @@ def main(mode, dataset, dataset_root, save_dir, tflogs_dir, debug, model_name, m
 
         valid_score = evaluate.evaluate("valid", ranker, kvalid, eval_batch_size,
                                         verbose=verbose, hooks=hooks, save_text=save_text,
-                                        predict_rel=predict_rel, load_to_gpu=has_cuda, flag_add_reverse=flag_add_reverse)
+                                        predict_rel=predict_rel, load_to_gpu=has_cuda, flag_add_reverse=flag_add_reverse,predict_time=predict_time)
 
         # ranker = evaluate.Ranker(scoring_function, kb.union([ktrain, kvalid, ktest]), kb_data=test,
         #                          filter_method=filter_method, flag_additional_filter=flag_additional_filter,
@@ -305,27 +322,7 @@ def main(mode, dataset, dataset_root, save_dir, tflogs_dir, debug, model_name, m
         pprint.pprint(valid_score)
         print("Test")
         pprint.pprint(test_score)
-        # ------------------ #
-        '''
 
-        # '''
-        # ---time prediction--- #
-        utils.colored_print("yellow", "\nEvaluating on time prediction\n")
-
-        # create test/valid kbs for subset of data (for which boths start end have been provided)
-        ktest_sub = kb.kb(datamap, os.path.join(dataset_root, 'intervals/test.txt'),
-                          add_unknowns=int(not (int(introduce_oov))),
-                          use_time_tokenizer=use_time_tokenizer)
-
-        kvalid_sub = kb.kb(datamap, os.path.join(dataset_root, 'intervals/valid.txt'),
-                           add_unknowns=int(not (int(introduce_oov))),
-                           use_time_tokenizer=use_time_tokenizer)
-
-        if predict_time:
-            time_evaluate(scoring_function, kvalid_sub, ktest_sub, time_args=time_args, dump_t_scores=dump_t_scores,
-                          load_to_gpu=has_cuda, save_time_results= save_time_results)
-        # '''
-        # ------------------- #
 
 
 if __name__ == "__main__":
@@ -355,7 +352,7 @@ if __name__ == "__main__":
     parser.add_argument('-a', '--model_arguments', help="model arguments as in __init__ of "
                                                         "model (Excluding entity and relation count), embedding_dim "
                                                         "argument required for training. "
-                                                        "This is a json string", required=False)
+                                                        "This is a json string", required=False,default='{"embedding_dim":200, "srt_wt": 5.0, "ort_wt": 5.0, "sot_wt": 5.0, "time_reg_wt":1.0, "emb_reg_wt":0.005}')
     parser.add_argument('-o', '--optimizer', required=False, default='Adagrad')
     parser.add_argument('-l', '--loss', help="loss function name as in losses.py",
                         required=False, default='crossentropy_loss')

@@ -12,9 +12,13 @@ class crossentropy_loss(torch.nn.Module):
 
     def forward(self, positive, negative_1):
         scores = torch.cat([positive, negative_1], dim=-1)
-        truth = torch.zeros(positive.shape[0],
-                            dtype=torch.long).cuda()  # positive.shape[1]+negative_1.shape[1]+negative_2.shape[1]).cuda()
+        if torch.cuda.is_available():
+            truth = torch.zeros(positive.shape[0],
+                                dtype=torch.long).cuda()  # positive.shape[1]+negative_1.shape[1]+negative_2.shape[1]).cuda()
         # truth[:, 0] = 1
+        else:
+            truth = torch.zeros(positive.shape[0],
+                                dtype=torch.long)
         truth = torch.autograd.Variable(truth, requires_grad=False)
         losses = self.loss(scores, truth)
         return losses

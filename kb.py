@@ -154,6 +154,7 @@ class Datamap(object):
         intervalId2dateYears = {}
         timeStr2Id = {}
         id2TimeStr = {}
+        timestamps = set()
         time_str=self.unk_time_str
         for filename in files_to_read:
             with open(os.path.join(dataset_root, filename)) as f:
@@ -193,6 +194,7 @@ class Datamap(object):
                         time_str = ''
 
                     if time_str not in timeStr2Id:
+                        timestamps.add(time_str)
                         newId = len(timeStr2Id)
                         timeStr2Id[time_str] = newId
                         id2TimeStr[newId] = time_str
@@ -224,7 +226,8 @@ class Datamap(object):
             self.unk_time_str, self.unk_time_str)  # (0,0)#
 
         # print("dateYear2id:",dateYear2id)
-
+        timeStr2Id = {x: i for (i, x) in enumerate(sorted(timestamps))}
+        id2TimeStr = {i:x for (i,x) in timeStr2Id.items()}
         return dateYear2id, id2dateYear, dateYears2intervalId, intervalId2dateYears, timeStr2Id, id2TimeStr
 
     def create_year2id(self, triple_time, bin_size=300):
