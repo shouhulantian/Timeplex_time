@@ -940,10 +940,10 @@ def get_tmrr_ranking(
         _, rank_sort_index = torch.sort(scores[i],descending=True)
 
         positive_rank = []
-        for i in range(len(test_target)):
-            t_score = scores[i].clone().detach()
+        for j in range(len(test_target)):
+            t_score = scores[j].clone().detach()
             t_score[target] = -1e6
-            target_score = scores[i][test_target[i]]
+            target_score = scores[j][test_target[i]]
             rank_triple = torch.sum((t_score > target_score).float()).cpu().item() + 1
             positive_rank.append(rank_triple)
         positive_mrr = numpy.mean([1/i for i in positive_rank])
