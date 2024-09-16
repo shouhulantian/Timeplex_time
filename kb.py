@@ -227,7 +227,7 @@ class Datamap(object):
 
         # print("dateYear2id:",dateYear2id)
         timeStr2Id = {x: i for (i, x) in enumerate(sorted(timestamps))}
-        id2TimeStr = {i:x for (i,x) in timeStr2Id.items()}
+        id2TimeStr = {x:i for (i,x) in timeStr2Id.items()}
         return dateYear2id, id2dateYear, dateYears2intervalId, intervalId2dateYears, timeStr2Id, id2TimeStr
 
     def create_year2id(self, triple_time, bin_size=300):
