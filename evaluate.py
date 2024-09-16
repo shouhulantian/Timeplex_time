@@ -935,22 +935,22 @@ def get_tmrr_ranking(
             target = filters_all[(int(triple[0]),int(triple[1]),int(triple[2]))]
         else:
             target = test_target
-        target = [int(i) for i in target]
-        test_target = [int(i) for i in test_target]
+        target = [int(k) for k in target]
+        test_target = [int(k) for k in test_target]
         _, rank_sort_index = torch.sort(scores[i],descending=True)
 
         positive_rank = []
         for j in range(len(test_target)):
-            t_score = scores[j].clone().detach()
+            t_score = scores[i].clone().detach()
             t_score[target] = -1e6
-            target_score = scores[j][test_target[j]]
+            target_score = scores[i][test_target[j]]
             rank_triple = torch.sum((t_score > target_score).float()).cpu().item() + 1
             positive_rank.append(rank_triple)
-        positive_mrr = numpy.mean([1/i for i in positive_rank])
+        positive_mrr = numpy.mean([1/k for k in positive_rank])
 
         time_diff = numpy.ones([len(test_target), n_day])
-        for i in range(len(test_target)):
-            time_diff[i] = abs(numpy.arange(0,n_day,1) - test_target[i])
+        for j in range(len(test_target)):
+            time_diff[j] = abs(numpy.arange(0,n_day,1) - test_target[j])
         time_diff = numpy.min(time_diff,axis=0)/n_day
         time_diff=torch.from_numpy(time_diff)
         if torch.cuda.is_available():
@@ -1033,7 +1033,7 @@ def evaluate(name, ranker, kb, batch_size, predict_time=0, predict_time_pair=0, 
         for i in range(0, int(triples.shape[0]), batch_size):
             start = i
             # end = min(i+batch_size, 100+facts.shape[0])
-            end = min(i + batch_size, triples.shape[0])
+            end = min(i + batch_size, int(triples.shape[0]))
             s = triples[start:end, 0]
             r = triples[start:end, 1]
             o = triples[start:end, 2]
