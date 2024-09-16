@@ -1168,9 +1168,9 @@ def evaluate(name, ranker, kb, batch_size, predict_time=0, predict_time_pair=0, 
                 top3_rel.append(top3)
 
         if predict_time:  # relation scores
-            scores_t, score_of_expected_t = ranker.forward(
+            scores_r, score_of_expected_r = ranker.forward(
                 s, r, o, t, flag_t=1, load_to_gpu=load_to_gpu)
-            ranks_r = ranker.filtered_ranks(start, end, scores_t, score_of_expected_t, predict='t', load_to_gpu=load_to_gpu)
+            ranks_r = ranker.filtered_ranks(start, end, scores_r, score_of_expected_r, predict='t', load_to_gpu=load_to_gpu)
 
             totals['t']['mr'] += ranks_r.sum()
             totals['t']['mrr'] += (1.0 / ranks_r).sum()
