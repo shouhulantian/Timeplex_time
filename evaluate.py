@@ -1198,10 +1198,10 @@ def evaluate(name, ranker, kb, batch_size, predict_time=0, predict_time_pair=0, 
 
                 # top3 rel
                 top3 = []
-                for idx in numpy.argsort(scores_r_np[i])[::-1][:3]:
-                    top3.append(rrm[idx])
-
-                top3_rel.append(top3)
+                # for idx in numpy.argsort(scores_r_np[i])[::-1][:3]:
+                #     top3.append(rrm[idx])
+                #
+                # top3_rel.append(top3)
 
 
         # ---------------------------#
