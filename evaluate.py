@@ -9,7 +9,6 @@ import pickle
 
 import pdb
 from collections import defaultdict as dd
-
 from utils import func_load_to_gpu
 from analysis_helper import save_preds
 
@@ -127,7 +126,7 @@ class Ranker(object):
                 if sro not in self.knowns_t:  # knowns_t not being used!
                     self.knowns_t[sro] = set()
                 # knowns_t not being used!
-                self.knowns_t[sro].add(fact[3])
+                self.knowns_t[sro].add(fact[-2])
 
             if flag_additional_filter:
                 ###
@@ -524,8 +523,12 @@ class Ranker(object):
             # ipdb.set_trace()
             scores = self.scoring_function(s, r, o, None).data
             # ipdb.set_trace()
-            t = t[:,:,-2]
-            score_of_expected = scores.gather(1, t.data)
+            if t is not None:
+                t = t[:,:,-2]
+                score_of_expected = scores.gather(1, t.data)
+            else:
+                score_of_expected = 0
+
         elif flag_tp:
             if t is not None:
                 if t.shape[-1] == len(time_index):  # pick dimension to index
@@ -761,7 +764,7 @@ class Ranker(object):
             return rank
 
 
-        if predict!='t' and self.filter_method != 'no-filter':
+        if self.filter_method != 'no-filter':
             scores.scatter_(
                 1, knowns, self.scoring_function.minimum_value)
 
@@ -909,6 +912,65 @@ class Ranker(object):
         return indices
     # ------------------------------------------- #
 
+def get_tmrr_ranking(
+        queries, scores, filters_all, filters, n_day
+):
+    """
+    Returns filtered ranking for a batch of queries ordered by timestamp.
+    :param queries: a torch.LongTensor of quadruples (lhs, rel, rhs, timestamp)
+    :param filters: ordered filters
+    :param chunk_size: maximum number of candidates processed at once
+    :return:
+    """
+    tmrrs = torch.zeros(len(queries))
+            # time_q = self.get_time_queries(queries)
+            # rhs = self.get_rhs(c_begin, chunk_size)
+            # scores = time_q @ rhs
+            # set filtered and true scores to -1e6 to be ignored
+            # take care that scores are chunked
+
+    for i, triple in enumerate(queries):
+        test_target = filters[(int(triple[0]),int(triple[1]),int(triple[2]))]
+        if (int(triple[0]),int(triple[1]),int(triple[2])) in filters_all.keys():
+            target = filters_all[(int(triple[0]),int(triple[1]),int(triple[2]))]
+        else:
+            target = test_target
+        target = [int(i) for i in target]
+        test_target = [int(i) for i in test_target]
+        _, rank_sort_index = torch.sort(scores[i],descending=True)
+
+        positive_rank = []
+        for i in range(len(test_target)):
+            t_score = scores[i].clone().detach()
+            t_score[target] = -1e6
+            target_score = scores[i][test_target[i]]
+            rank_triple = torch.sum((t_score > target_score).float()).cpu().item() + 1
+            positive_rank.append(rank_triple)
+        positive_mrr = numpy.mean([1/i for i in positive_rank])
+
+        time_diff = numpy.ones([len(test_target), n_day])
+        for i in range(len(test_target)):
+            time_diff[i] = abs(numpy.arange(0,n_day,1) - test_target[i])
+        time_diff = numpy.min(time_diff,axis=0)/n_day
+        time_diff=torch.from_numpy(time_diff)
+        if torch.cuda.is_available():
+            time_diff=time_diff.cuda()
+        negative_index = (scores[i] > torch.min(scores[i][test_target]))
+        negative_index[target] = False
+        negative_score = 1 / (rank_sort_index+1) * time_diff
+        negative_mrr = sum(negative_score[negative_index])/len(test_target)
+        if negative_mrr !=0:
+            negative_mrr = negative_mrr.cpu().item()
+        tmrr = positive_mrr-negative_mrr
+        # print('******')
+        # print(len(test_target))
+        # print(positive_rank)
+        # print(positive_mrr)
+        # print(negative_mrr)
+        tmrrs[i] = tmrr
+    tmrrs = tmrrs.cpu()
+            #print(ranks)
+    return tmrrs.sum()
 
 
 def evaluate(name, ranker, kb, batch_size, predict_time=0, predict_time_pair=0, predict_rel=0, verbose=0,
@@ -951,6 +1013,60 @@ def evaluate(name, ranker, kb, batch_size, predict_time=0, predict_time_pair=0, 
     # --pickle for testing--#
     scores_t_pickle = []
     # ----------------------#
+
+    if predict_rel:
+        tmrr = 0
+        triples = []
+        filters = {'rhs': dd(set)}
+        for fact in facts:
+            triples.append((fact[0], fact[1], fact[2]))
+            filters['rhs'][(fact[0], fact[1], fact[2])].add(fact[-2])
+        triples = numpy.array(list(set(triples)))
+        tmrr_filters = {}
+        for k, v in filters['rhs'].items():
+            tmrr_filters[k] = sorted(list(v))
+
+        # for k,v in tmrr_filters.items():
+        #     if k not in ranker.knowns_t.keys():
+        #         print(k)
+
+        for i in range(0, int(triples.shape[0]), batch_size):
+            start = i
+            # end = min(i+batch_size, 100+facts.shape[0])
+            end = min(i + batch_size, triples.shape[0])
+            s = triples[start:end, 0]
+            r = triples[start:end, 1]
+            o = triples[start:end, 2]
+
+            if load_to_gpu:
+                s = torch.autograd.Variable(torch.from_numpy(
+                    s).cuda().unsqueeze(1), requires_grad=False)
+                r = torch.autograd.Variable(torch.from_numpy(
+                    r).cuda().unsqueeze(1), requires_grad=False)
+                o = torch.autograd.Variable(torch.from_numpy(
+                    o).cuda().unsqueeze(1), requires_grad=False)
+            else:
+                s = torch.autograd.Variable(torch.from_numpy(
+                    s).unsqueeze(1), requires_grad=False)
+                r = torch.autograd.Variable(torch.from_numpy(
+                    r).unsqueeze(1), requires_grad=False)
+                o = torch.autograd.Variable(torch.from_numpy(
+                    o).unsqueeze(1), requires_grad=False)
+            t=None
+            scores_r, score_of_expected_r = ranker.forward(
+                s, r, o, t, flag_t=1, load_to_gpu=load_to_gpu)
+
+            tmrr =tmrr+ get_tmrr_ranking(triples[start:end],scores_r,ranker.knowns_t,tmrr_filters,len(kb.datamap.id2TimeStr))
+        print('tmrr:', tmrr/len(triples))
+        # positive_rank = []
+        # for i in range(len(test_target)):
+        #     t_score = scores_r[i].clone().detach()
+        #     t_score[target] = -1e6
+        #     target_score = scores[i][test_target[i]]
+        #     rank_triple = torch.sum((t_score > target_score).float()).cpu().item() + 1
+        #     positive_rank.append(rank_triple)
+        # positive_mrr = np.mean([1 / i for i in positive_rank])
+        # ranks_r = ranker.filtered_ranks(start, end, scores_r, score_of_expected_r, predict='t', load_to_gpu=load_to_gpu)
 
     for i in range(0, int(facts.shape[0]), batch_size):
         # break
@@ -1050,15 +1166,15 @@ def evaluate(name, ranker, kb, batch_size, predict_time=0, predict_time_pair=0, 
         # print("Total ranks worsened:",worse_cnt)
         # xx=input()
         '''
-        if predict_rel:
-            scores_r, score_of_expected_r = ranker.forward(
-                s, r, o, t, flag_r=1, load_to_gpu=load_to_gpu)
-            ranks_r = ranker.filtered_ranks(start, end, scores_r, score_of_expected_r, predict='r', load_to_gpu=load_to_gpu)
-
-            totals['r']['mr'] += ranks_r.sum()
-            totals['r']['mrr'] += (1.0 / ranks_r).sum()
-            totals['r']['hits10'] += ranks_r.le(10).float().sum()
-            totals['r']['hits1'] += ranks_r.eq(1).float().sum()
+        # if predict_rel:
+        #     scores_r, score_of_expected_r = ranker.forward(
+        #         s, r, o, t, flag_r=1, load_to_gpu=load_to_gpu)
+        #     ranks_r = ranker.filtered_ranks(start, end, scores_r, score_of_expected_r, predict='r', load_to_gpu=load_to_gpu)
+        #
+        #     totals['r']['mr'] += ranks_r.sum()
+        #     totals['r']['mrr'] += (1.0 / ranks_r).sum()
+        #     totals['r']['hits10'] += ranks_r.le(10).float().sum()
+        #     totals['r']['hits1'] += ranks_r.eq(1).float().sum()
 
         if predict_time_pair:  # and not kb.use_time_interval:
             if ranker.expand_mode == "start-end-diff-relation":
@@ -1141,6 +1257,14 @@ def evaluate(name, ranker, kb, batch_size, predict_time=0, predict_time_pair=0, 
 
 
         if predict_rel:  # relation scores
+            scores_r, score_of_expected_r = ranker.forward(
+                s, r, o, t, flag_t=1, load_to_gpu=load_to_gpu)
+            ranks_r = ranker.filtered_ranks(start, end, scores_r, score_of_expected_r, predict='t', load_to_gpu=load_to_gpu)
+
+            totals['t']['mr'] += ranks_r.sum()
+            totals['t']['mrr'] += (1.0 / ranks_r).sum()
+            totals['t']['hits10'] += ranks_r.le(10).float().sum()
+            totals['t']['hits1'] += ranks_r.eq(1).float().sum()
             scores_r_np = scores_r.data.cpu().numpy()
             score_of_expected_r_np = score_of_expected_r.data.cpu().numpy()
 
